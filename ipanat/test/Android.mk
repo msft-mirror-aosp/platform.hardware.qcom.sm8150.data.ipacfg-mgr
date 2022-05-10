@@ -1,5 +1,5 @@
 BOARD_PLATFORM_LIST := test
-ifeq ($(call is-board-platform-in-list,$(BOARD_PLATFORM_LIST)),true)
+ifneq (,$(call is-board-platform-in-list2,$(BOARD_PLATFORM_LIST)))
 ifneq (,$(filter $(QCOM_BOARD_PLATFORMS),$(TARGET_BOARD_PLATFORM)))
 ifneq (, $(filter aarch64 arm arm64, $(TARGET_ARCH)))
 
@@ -14,6 +14,9 @@ LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
 LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
 
 LOCAL_MODULE := ipa_nat_test
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-BSD
+LOCAL_LICENSE_CONDITIONS := notice
+LOCAL_NOTICE_FILE := $(LOCAL_PATH)/../../LICENSE
 LOCAL_SRC_FILES := ipa_nat_test000.c \
 		ipa_nat_test001.c \
 		ipa_nat_test002.c \
