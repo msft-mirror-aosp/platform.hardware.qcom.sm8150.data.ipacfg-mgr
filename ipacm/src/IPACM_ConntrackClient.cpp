@@ -31,6 +31,9 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#ifndef in_addr_t
+typedef uint32_t in_addr_t;
+#endif
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
@@ -482,11 +485,17 @@ void* IPACM_ConntrackClient::TCPRegisterWithConnTrack(void *)
 			 blocks waiting for events. */
 	IPACMDBG("Waiting for events\n");
 
+ctcatch:
 	ret = nfct_catch(pClient->tcp_hdl);
-	if(ret == -1)
+	if((ret == -1) && (errno != ENOMSG))
 	{
-		IPACMERR("(%d)(%s)\n", ret, strerror(errno));
+		IPACMERR("(%d)(%d)(%s)\n", ret, errno, strerror(errno));
 		return NULL;
+	}
+	else
+	{
+		IPACMDBG("ctcatch ret:%d, errno:%d\n", ret, errno);
+		goto ctcatch;
 	}
 
 	IPACMDBG("Exit from tcp thread\n");
@@ -568,14 +577,15 @@ void* IPACM_ConntrackClient::UDPRegisterWithConnTrack(void *)
 	/* Block to catch events from net filter connection track */
 ctcatch:
 	ret = nfct_catch(pClient->udp_hdl);
-	if(ret == -1)
+	/* Due to conntrack dump, sequence number might mismatch for initial events. */
+	if((ret == -1) && (errno != ENOMSG) && (errno != EILSEQ))
 	{
-		IPACMDBG("(%d)(%s)\n", ret, strerror(errno));
+		IPACMDBG("(%d)(%d)(%s)\n", ret, errno, strerror(errno));
 		return NULL;
 	}
 	else
 	{
-		IPACMDBG("ctcatch ret:%d\n", ret);
+		IPACMDBG("ctcatch ret:%d, errno:%d\n", ret, errno);
 		goto ctcatch;
 	}
 
